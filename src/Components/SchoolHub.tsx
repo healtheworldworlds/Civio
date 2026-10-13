@@ -53,6 +53,30 @@ const FEATURED_SCHOOLS: University[] = [
     webPage: 'https://future.utoronto.ca/apply',
     feeBadge: 'Standard Fee',
     type: 'Public Research University'
+  },
+  {
+    name: 'Harvard University',
+    country: 'United States',
+    stateProvince: 'Massachusetts',
+    webPage: 'https://college.harvard.edu/admissions',
+    feeBadge: 'Fee Waiver by Request',
+    type: 'Private Ivy League University'
+  },
+  {
+    name: 'University of Oxford',
+    country: 'United Kingdom',
+    stateProvince: 'Oxford',
+    webPage: 'https://www.ox.ac.uk/admissions',
+    feeBadge: 'UCAS International Fee',
+    type: 'Collegiate Research University'
+  },
+  {
+    name: 'Ashesi University',
+    country: 'Ghana',
+    stateProvince: 'Berekuso',
+    webPage: 'https://www.ashesi.edu.gh/admissions',
+    feeBadge: 'Financial Aid Available',
+    type: 'Private Liberal Arts University'
   }
 ];
 
@@ -61,6 +85,7 @@ export default function SchoolHub({ initialQuery = '' }: SchoolHubProps) {
   const [selectedRegion, setSelectedRegion] = useState('All');
   const [results, setResults] = useState<University[]>(FEATURED_SCHOOLS);
   const [loading, setLoading] = useState(false);
+  const [statusText, setStatusText] = useState('');
 
   useEffect(() => {
     if (initialQuery) {
@@ -69,51 +94,75 @@ export default function SchoolHub({ initialQuery = '' }: SchoolHubProps) {
   }, [initialQuery]);
 
   useEffect(() => {
-    if (searchQuery.trim().length < 3) {
+    const query = searchQuery.trim();
+
+    if (query.length === 0) {
       setResults(FEATURED_SCHOOLS);
+      setStatusText('');
       setLoading(false);
       return;
     }
 
-    const controller = new AbortController();
-    const fetchUniversities = async () => {
-      setLoading(true);
-      try {
-        let url = `https://universities.hipolabs.com/search?name=${encodeURIComponent(searchQuery.trim())}`;
-        if (selectedRegion === 'USA') url += '&country=United+States';
-        if (selectedRegion === 'Canada') url += '&country=Canada';
-        if (selectedRegion === 'Ghana') url += '&country=Ghana';
+    if (query.length < 2) {
+      return;
+    }
 
-        const res = await fetch(url, { signal: controller.signal });
+    const controller = new AbortController();
+
+    const fetchSchools = async () => {
+      setLoading(true);
+      setStatusText('Searching worldwide index...');
+
+      try {
+        let apiUrl = `https://universities.hipolabs.com/search?name=${encodeURIComponent(query)}`;
+        if (selectedRegion === 'USA') apiUrl += '&country=United+States';
+        if (selectedRegion === 'Canada') apiUrl += '&country=Canada';
+        if (selectedRegion === 'Ghana') apiUrl += '&country=Ghana';
+
+        const res = await fetch(apiUrl, { signal: controller.signal });
+        if (!res.ok) throw new Error('API query failed');
         const data = await res.json();
 
-        const formatted: University[] = data.slice(0, 30).map((item: any) => ({
-          name: item.name,
-          country: item.country,
-          stateProvince: item['state-province'] || null,
-          webPage: item.web_pages && item.web_pages.length > 0 ? item.web_pages[0] : '#',
-          feeBadge: 'Verified Directory',
-          type: 'Accredited Higher Education'
-        }));
-
-        setResults(formatted);
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: University[] = data.slice(0, 40).map((item: any) => ({
+            name: item.name,
+            country: item.country,
+            stateProvince: item['state-province'] || null,
+            webPage: item.web_pages && item.web_pages.length > 0 ? item.web_pages[0] : '#',
+            feeBadge: 'Verified Directory',
+            type: 'Accredited Higher Education'
+          }));
+          setResults(mapped);
+          setStatusText(`Found ${mapped.length} matching institutions`);
+        } else {
+          const localFiltered = FEATURED_SCHOOLS.filter((s) =>
+            s.name.toLowerCase().includes(query.toLowerCase())
+          );
+          setResults(localFiltered);
+          setStatusText(localFiltered.length > 0 ? '' : 'No institutions match this keyword');
+        }
       } catch (err: any) {
         if (err.name !== 'AbortError') {
-          console.error('Failed to fetch universities:', err);
+          console.warn('API lookup error, using local catalog:', err);
+          const fallbackMatches = FEATURED_SCHOOLS.filter((s) =>
+            s.name.toLowerCase().includes(query.toLowerCase())
+          );
+          setResults(fallbackMatches);
+          setStatusText('Offline/Local results shown');
         }
       } finally {
         setLoading(false);
       }
     };
 
-    const debounceTimer = setTimeout(fetchUniversities, 400);
+    const timer = setTimeout(fetchSchools, 350);
     return () => {
       controller.abort();
-      clearTimeout(debounceTimer);
+      clearTimeout(timer);
     };
   }, [searchQuery, selectedRegion]);
 
-  const filteredResults = results.filter((school) => {
+  const filtered = results.filter((school) => {
     if (selectedRegion === 'All') return true;
     if (selectedRegion === 'USA') return school.country === 'United States';
     if (selectedRegion === 'Canada') return school.country === 'Canada';
@@ -138,7 +187,7 @@ export default function SchoolHub({ initialQuery = '' }: SchoolHubProps) {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search universities, programs, or locations (e.g. Minnesota State, Kumasi, Toronto)..."
+          placeholder="Search universities worldwide (e.g. Harvard, Oxford, Legon, Minnesota, Toronto)..."
           className="w-full bg-[#121929] border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         {loading && (
@@ -148,33 +197,36 @@ export default function SchoolHub({ initialQuery = '' }: SchoolHubProps) {
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {['All', 'USA', 'Canada', 'Ghana', 'Europe / Global'].map((region) => (
-          <button
-            key={region}
-            onClick={() => setSelectedRegion(region)}
-            className={`px-4 py-1.5 rounded-full text-xs md:text-sm font-medium transition ${
-              selectedRegion === region
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'bg-[#182338] text-gray-300 hover:bg-[#202e49]'
-            }`}
-          >
-            {region}
-          </button>
-        ))}
+      <div className="flex flex-wrap gap-2 items-center justify-between">
+        <div className="flex flex-wrap gap-2">
+          {['All', 'USA', 'Canada', 'Ghana', 'Europe / Global'].map((region) => (
+            <button
+              key={region}
+              onClick={() => setSelectedRegion(region)}
+              className={`px-4 py-1.5 rounded-full text-xs md:text-sm font-medium transition ${
+                selectedRegion === region
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-[#182338] text-gray-300 hover:bg-[#202e49]'
+              }`}
+            >
+              {region}
+            </button>
+          ))}
+        </div>
+        {statusText && <span className="text-xs text-gray-400">{statusText}</span>}
       </div>
 
       <div className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-        MATCHING INSTITUTIONS ({filteredResults.length})
+        MATCHING INSTITUTIONS ({filtered.length})
       </div>
 
       <div className="space-y-4">
-        {filteredResults.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="bg-[#0f172a] border border-gray-800 rounded-2xl p-8 text-center text-gray-400">
-            No matching institutions found. Try adjusting your search keywords.
+            No matching institutions found for "{searchQuery}". Try another keyword or check region filters.
           </div>
         ) : (
-          filteredResults.map((school, idx) => (
+          filtered.map((school, idx) => (
             <div
               key={`${school.name}-${idx}`}
               className="bg-[#0d1527] border border-gray-800/80 rounded-2xl p-5 hover:border-blue-500/50 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
