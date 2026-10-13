@@ -1,6 +1,27 @@
 import React, { useState, useEffect } from 'react'
-import { Landmark, Search, PlusCircle, CheckCircle2, Users, Loader2, X, Filter, LogIn, LogOut, User, Trash2, Vote, MessageSquare, Edit3, Check } from 'lucide-react'
+import { 
+  Landmark, 
+  Search, 
+  PlusCircle, 
+  CheckCircle2, 
+  Users, 
+  Loader2, 
+  X, 
+  Filter, 
+  LogIn, 
+  LogOut, 
+  User, 
+  Trash2, 
+  Vote, 
+  MessageSquare, 
+  Edit3, 
+  Check, 
+  GraduationCap, 
+  Sparkles 
+} from 'lucide-react'
 import { supabase } from './lib/supabase'
+import SchoolHub from './Components/SchoolHub'
+import LiveFeed from './Components/LiveFeed'
 
 interface Initiative {
   id: string
@@ -34,6 +55,7 @@ interface Comment {
 }
 
 export default function App() {
+  const [currentTab, setCurrentTab] = useState<'civic' | 'admissions' | 'opportunities'>('civic')
   const [sectionView, setSectionView] = useState<'initiatives' | 'polls'>('initiatives')
   const [activeTab, setActiveTab] = useState<string>('All')
   const [searchQuery, setSearchQuery] = useState<string>('')
@@ -379,8 +401,8 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Header */}
       <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 sm:gap-6">
             <div className="flex items-center gap-2">
               <div className="p-2 bg-indigo-600 rounded-lg text-white">
                 <Landmark className="w-5 h-5" />
@@ -388,43 +410,57 @@ export default function App() {
               <span className="font-bold text-xl tracking-tight text-white">Civio</span>
             </div>
 
+            {/* 3-Pillar Master Navigation */}
             <nav className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-1">
               <button
-                onClick={() => setSectionView('initiatives')}
+                onClick={() => setCurrentTab('civic')}
                 className={`px-3 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
-                  sectionView === 'initiatives' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  currentTab === 'civic' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Initiatives
+                Civic Hub
               </button>
+
               <button
-                onClick={() => setSectionView('polls')}
+                onClick={() => setCurrentTab('admissions')}
                 className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 transition cursor-pointer ${
-                  sectionView === 'polls' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  currentTab === 'admissions' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <Vote className="w-3.5 h-3.5" />
-                <span>Civic Polls</span>
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Admissions</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentTab('opportunities')}
+                className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 transition cursor-pointer ${
+                  currentTab === 'opportunities' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Opportunities</span>
               </button>
             </nav>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="relative hidden md:block">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input 
-                type="text" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search..." 
-                className="bg-slate-900 border border-slate-750 text-sm rounded-full pl-9 pr-4 py-1.5 focus:outline-none focus:border-indigo-500 text-slate-200 placeholder-slate-500 w-56"
-              />
-            </div>
+            {currentTab === 'civic' && (
+              <div className="relative hidden md:block">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search..." 
+                  className="bg-slate-900 border border-slate-750 text-sm rounded-full pl-9 pr-4 py-1.5 focus:outline-none focus:border-indigo-500 text-slate-200 placeholder-slate-500 w-48 lg:w-56"
+                />
+              </div>
+            )}
 
             {user ? (
               <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs">
                 <User className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="text-slate-300 font-medium truncate max-w-[120px]">{user.email}</span>
+                <span className="text-slate-300 font-medium truncate max-w-[100px] sm:max-w-[120px]">{user.email}</span>
                 <button 
                   onClick={handleSignOut} 
                   title="Sign Out" 
@@ -443,41 +479,76 @@ export default function App() {
               </button>
             )}
 
-            <button 
-              onClick={() => {
-                if (!user) {
-                  setIsAuthModalOpen(true)
-                } else {
-                  if (sectionView === 'initiatives') {
-                    setEditingInitiativeId(null)
-                    setFormData({ title: '', description: '', category: 'Education' })
-                    setIsModalOpen(true)
+            {currentTab === 'civic' && (
+              <button 
+                onClick={() => {
+                  if (!user) {
+                    setIsAuthModalOpen(true)
                   } else {
-                    setIsPollModalOpen(true)
+                    if (sectionView === 'initiatives') {
+                      setEditingInitiativeId(null)
+                      setFormData({ title: '', description: '', category: 'Education' })
+                      setIsModalOpen(true)
+                    } else {
+                      setIsPollModalOpen(true)
+                    }
                   }
-                }
-              }}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>{sectionView === 'initiatives' ? 'New Action' : 'Create Poll'}</span>
-            </button>
+                }}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span className="hidden sm:inline">{sectionView === 'initiatives' ? 'New Action' : 'Create Poll'}</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="max-w-6xl mx-auto px-4 py-8 flex-1 w-full grid grid-cols-1 md:grid-cols-3 gap-8">
-        <section className="md:col-span-2 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                {sectionView === 'initiatives' ? 'Civic Engagement Feed' : 'Active Community Polls'}
-              </h1>
-              <p className="text-sm text-slate-400">
-                {sectionView === 'initiatives' ? 'Discover, support, and discuss local initiatives' : 'One person, one vote. Shape town policies.'}
-              </p>
+      {/* Main Tab Views */}
+      {currentTab === 'admissions' && <SchoolHub />}
+
+      {currentTab === 'opportunities' && <LiveFeed />}
+
+      {currentTab === 'civic' && (
+        <main className="max-w-6xl mx-auto px-4 py-8 flex-1 w-full grid grid-cols-1 md:grid-cols-3 gap-8">
+          <section className="md:col-span-2 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-white">
+                    {sectionView === 'initiatives' ? 'Civic Engagement Feed' : 'Active Community Polls'}
+                  </h1>
+                  <p className="text-sm text-slate-400">
+                    {sectionView === 'initiatives' ? 'Discover, support, and discuss local initiatives' : 'One person, one vote. Shape town policies.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Sub-toggle for Initiatives vs Polls */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-1">
+                  <button
+                    onClick={() => setSectionView('initiatives')}
+                    className={`px-2.5 py-1 text-xs font-semibold rounded-md transition cursor-pointer ${
+                      sectionView === 'initiatives' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Initiatives
+                  </button>
+                  <button
+                    onClick={() => setSectionView('polls')}
+                    className={`px-2.5 py-1 text-xs font-semibold rounded-md flex items-center gap-1 transition cursor-pointer ${
+                      sectionView === 'polls' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Vote className="w-3 h-3" />
+                    <span>Polls</span>
+                  </button>
+                </div>
+              </div>
             </div>
+
+            {/* Filter pills */}
             <div className="flex flex-wrap gap-1.5">
               {categories.map((cat) => (
                 <button
@@ -493,303 +564,303 @@ export default function App() {
                 </button>
               ))}
             </div>
-          </div>
 
-          {loading && (
-            <div className="flex items-center justify-center p-12 text-slate-400 gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Loading civic data...</span>
-            </div>
-          )}
+            {loading && (
+              <div className="flex items-center justify-center p-12 text-slate-400 gap-2">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Loading civic data...</span>
+              </div>
+            )}
 
-          {errorMsg && (
-            <div className="bg-rose-950/40 border border-rose-800 text-rose-300 p-4 rounded-xl text-sm">
-              Failed to load records: {errorMsg}
-            </div>
-          )}
+            {errorMsg && (
+              <div className="bg-rose-950/40 border border-rose-800 text-rose-300 p-4 rounded-xl text-sm">
+                Failed to load records: {errorMsg}
+              </div>
+            )}
 
-          {/* INITIATIVES SECTION */}
-          {sectionView === 'initiatives' && !loading && !errorMsg && (
-            <>
-              {filteredInitiatives.length === 0 && (
-                <div className="text-center py-12 bg-slate-900/30 border border-slate-800 rounded-xl">
-                  <Filter className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                  <p className="text-slate-300 font-medium">No initiatives found</p>
-                  <p className="text-xs text-slate-500 mt-1">Try selecting another category or clear your search.</p>
-                </div>
-              )}
+            {/* INITIATIVES SECTION */}
+            {sectionView === 'initiatives' && !loading && !errorMsg && (
+              <>
+                {filteredInitiatives.length === 0 && (
+                  <div className="text-center py-12 bg-slate-900/30 border border-slate-800 rounded-xl">
+                    <Filter className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+                    <p className="text-slate-300 font-medium">No initiatives found</p>
+                    <p className="text-xs text-slate-500 mt-1">Try selecting another category or clear your search.</p>
+                  </div>
+                )}
 
-              {filteredInitiatives.map((initiative) => {
-                const isAuthor = user && initiative.author_email === user.email
-                const initiativeComments = comments.filter(c => c.initiative_id === initiative.id)
-                const isCommentBoxOpen = expandedComments[initiative.id]
+                {filteredInitiatives.map((initiative) => {
+                  const isAuthor = user && initiative.author_email === user.email
+                  const initiativeComments = comments.filter(c => c.initiative_id === initiative.id)
+                  const isCommentBoxOpen = expandedComments[initiative.id]
 
-                return (
-                  <div 
-                    key={initiative.id} 
-                    className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition space-y-4"
-                  >
-                    <div className="flex items-center justify-between text-xs text-slate-400">
-                      <span className="bg-indigo-950 text-indigo-300 px-2.5 py-0.5 rounded border border-indigo-800 font-medium">
-                        {initiative.category}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-500">By {initiative.author_email || 'Anonymous'}</span>
-                        <span>•</span>
-                        <span>{new Date(initiative.created_at).toLocaleDateString()}</span>
-                        {isAuthor && (
-                          <div className="flex items-center gap-1 ml-2">
-                            <button
-                              onClick={() => startEditInitiative(initiative)}
-                              title="Edit Initiative"
-                              className="text-slate-500 hover:text-indigo-400 transition cursor-pointer p-1"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteInitiative(initiative.id)}
-                              title="Delete Initiative"
-                              className="text-slate-500 hover:text-rose-400 transition cursor-pointer p-1"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h2 className="text-lg font-semibold text-slate-100">{initiative.title}</h2>
-                      <p className="text-sm text-slate-400 mt-1 leading-relaxed">
-                        {initiative.description}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs text-slate-400">
-                      <div className="flex items-center gap-4">
-                        <button 
-                          onClick={() => handleEndorse(initiative.id, initiative.endorsements_count)}
-                          className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 transition cursor-pointer"
-                        >
-                          <CheckCircle2 className="w-4 h-4" /> {initiative.endorsements_count} Endorsements
-                        </button>
-                        <span className="flex items-center gap-1.5">
-                          <Users className="w-4 h-4" /> {initiative.volunteers_count} Volunteers
+                  return (
+                    <div 
+                      key={initiative.id} 
+                      className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition space-y-4"
+                    >
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span className="bg-indigo-950 text-indigo-300 px-2.5 py-0.5 rounded border border-indigo-800 font-medium">
+                          {initiative.category}
                         </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500">By {initiative.author_email || 'Anonymous'}</span>
+                          <span>•</span>
+                          <span>{new Date(initiative.created_at).toLocaleDateString()}</span>
+                          {isAuthor && (
+                            <div className="flex items-center gap-1 ml-2">
+                              <button
+                                onClick={() => startEditInitiative(initiative)}
+                                title="Edit Initiative"
+                                className="text-slate-500 hover:text-indigo-400 transition cursor-pointer p-1"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteInitiative(initiative.id)}
+                                title="Delete Initiative"
+                                className="text-slate-500 hover:text-rose-400 transition cursor-pointer p-1"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <button 
-                          onClick={() => setExpandedComments(prev => ({ ...prev, [initiative.id]: !prev[initiative.id] }))}
-                          className="flex items-center gap-1.5 text-slate-400 hover:text-indigo-300 transition cursor-pointer"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                          <span>{initiativeComments.length} Comments</span>
-                        </button>
-                        <button 
-                          onClick={() => handleVolunteer(initiative.id, initiative.volunteers_count)}
-                          className="text-indigo-400 hover:text-indigo-300 font-medium transition cursor-pointer"
-                        >
-                          Join &rarr;
-                        </button>
+
+                      <div>
+                        <h2 className="text-lg font-semibold text-slate-100">{initiative.title}</h2>
+                        <p className="text-sm text-slate-400 mt-1 leading-relaxed">
+                          {initiative.description}
+                        </p>
                       </div>
-                    </div>
 
-                    {/* COMMENTS THREAD */}
-                    {isCommentBoxOpen && (
-                      <div className="mt-4 pt-4 border-t border-slate-800/60 space-y-3 bg-slate-950/40 p-4 rounded-lg">
-                        <h4 className="text-xs font-semibold text-slate-300">Community Discussion</h4>
-
-                        {initiativeComments.length === 0 ? (
-                          <p className="text-xs text-slate-500 italic">No comments yet. Start the conversation!</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {initiativeComments.map(c => {
-                              const isCommentAuthor = user && c.author_email === user.email
-                              return (
-                                <div key={c.id} className="bg-slate-900/70 border border-slate-800/80 rounded-md p-2.5 text-xs">
-                                  <div className="flex items-center justify-between text-slate-400 mb-1">
-                                    <span className="font-medium text-slate-300">{c.author_email}</span>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[10px] text-slate-500">{new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                      {isCommentAuthor && (
-                                        <div className="flex items-center gap-1">
-                                          <button
-                                            onClick={() => {
-                                              setEditingCommentId(c.id)
-                                              setEditingCommentText(c.content)
-                                            }}
-                                            className="text-slate-500 hover:text-indigo-300"
-                                            title="Edit comment"
-                                          >
-                                            <Edit3 className="w-3 h-3" />
-                                          </button>
-                                          <button
-                                            onClick={() => handleDeleteComment(c.id)}
-                                            className="text-slate-500 hover:text-rose-400"
-                                            title="Delete comment"
-                                          >
-                                            <Trash2 className="w-3 h-3" />
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  {editingCommentId === c.id ? (
-                                    <div className="flex gap-2 mt-2">
-                                      <input
-                                        type="text"
-                                        value={editingCommentText}
-                                        onChange={(e) => setEditingCommentText(e.target.value)}
-                                        className="flex-1 bg-slate-950 border border-slate-750 rounded px-2 py-1 text-xs text-slate-200"
-                                      />
-                                      <button 
-                                        onClick={() => handleUpdateComment(c.id)}
-                                        className="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded text-xs"
-                                      >
-                                        Save
-                                      </button>
-                                      <button 
-                                        onClick={() => setEditingCommentId(null)}
-                                        className="text-slate-400 hover:text-white px-2 py-1 text-xs"
-                                      >
-                                        Cancel
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <p className="text-slate-300 leading-relaxed">{c.content}</p>
-                                  )}
-                                </div>
-                              )
-                            })}
-                          </div>
-                        )}
-
-                        {/* Add Comment Input */}
-                        <div className="flex gap-2 pt-2">
-                          <input
-                            type="text"
-                            placeholder={user ? "Write a civic comment..." : "Sign in to leave a comment..."}
-                            value={newCommentText[initiative.id] || ''}
-                            onChange={(e) => setNewCommentText(prev => ({ ...prev, [initiative.id]: e.target.value }))}
-                            onKeyDown={(e) => { if (e.key === 'Enter') handleAddComment(initiative.id) }}
-                            className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 placeholder-slate-600"
-                          />
-                          <button
-                            onClick={() => handleAddComment(initiative.id)}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer"
+                      <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs text-slate-400">
+                        <div className="flex items-center gap-4">
+                          <button 
+                            onClick={() => handleEndorse(initiative.id, initiative.endorsements_count)}
+                            className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 transition cursor-pointer"
                           >
-                            Post
+                            <CheckCircle2 className="w-4 h-4" /> {initiative.endorsements_count} Endorsements
+                          </button>
+                          <span className="flex items-center gap-1.5">
+                            <Users className="w-4 h-4" /> {initiative.volunteers_count} Volunteers
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button 
+                            onClick={() => setExpandedComments(prev => ({ ...prev, [initiative.id]: !prev[initiative.id] }))}
+                            className="flex items-center gap-1.5 text-slate-400 hover:text-indigo-300 transition cursor-pointer"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            <span>{initiativeComments.length} Comments</span>
+                          </button>
+                          <button 
+                            onClick={() => handleVolunteer(initiative.id, initiative.volunteers_count)}
+                            className="text-indigo-400 hover:text-indigo-300 font-medium transition cursor-pointer"
+                          >
+                            Join &rarr;
                           </button>
                         </div>
                       </div>
-                    )}
+
+                      {/* COMMENTS THREAD */}
+                      {isCommentBoxOpen && (
+                        <div className="mt-4 pt-4 border-t border-slate-800/60 space-y-3 bg-slate-950/40 p-4 rounded-lg">
+                          <h4 className="text-xs font-semibold text-slate-300">Community Discussion</h4>
+
+                          {initiativeComments.length === 0 ? (
+                            <p className="text-xs text-slate-500 italic">No comments yet. Start the conversation!</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {initiativeComments.map(c => {
+                                const isCommentAuthor = user && c.author_email === user.email
+                                return (
+                                  <div key={c.id} className="bg-slate-900/70 border border-slate-800/80 rounded-md p-2.5 text-xs">
+                                    <div className="flex items-center justify-between text-slate-400 mb-1">
+                                      <span className="font-medium text-slate-300">{c.author_email}</span>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[10px] text-slate-500">{new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        {isCommentAuthor && (
+                                          <div className="flex items-center gap-1">
+                                            <button
+                                              onClick={() => {
+                                                setEditingCommentId(c.id)
+                                                setEditingCommentText(c.content)
+                                              }}
+                                              className="text-slate-500 hover:text-indigo-300"
+                                              title="Edit comment"
+                                            >
+                                              <Edit3 className="w-3 h-3" />
+                                            </button>
+                                            <button
+                                              onClick={() => handleDeleteComment(c.id)}
+                                              className="text-slate-500 hover:text-rose-400"
+                                              title="Delete comment"
+                                            >
+                                              <Trash2 className="w-3 h-3" />
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {editingCommentId === c.id ? (
+                                      <div className="flex gap-2 mt-2">
+                                        <input
+                                          type="text"
+                                          value={editingCommentText}
+                                          onChange={(e) => setEditingCommentText(e.target.value)}
+                                          className="flex-1 bg-slate-950 border border-slate-750 rounded px-2 py-1 text-xs text-slate-200"
+                                        />
+                                        <button 
+                                          onClick={() => handleUpdateComment(c.id)}
+                                          className="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded text-xs"
+                                        >
+                                          Save
+                                        </button>
+                                        <button 
+                                          onClick={() => setEditingCommentId(null)}
+                                          className="text-slate-400 hover:text-white px-2 py-1 text-xs"
+                                        >
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <p className="text-slate-300 leading-relaxed">{c.content}</p>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+
+                          {/* Add Comment Input */}
+                          <div className="flex gap-2 pt-2">
+                            <input
+                              type="text"
+                              placeholder={user ? "Write a civic comment..." : "Sign in to leave a comment..."}
+                              value={newCommentText[initiative.id] || ''}
+                              onChange={(e) => setNewCommentText(prev => ({ ...prev, [initiative.id]: e.target.value }))}
+                              onKeyDown={(e) => { if (e.key === 'Enter') handleAddComment(initiative.id) }}
+                              className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 placeholder-slate-600"
+                            />
+                            <button
+                              onClick={() => handleAddComment(initiative.id)}
+                              className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition cursor-pointer"
+                            >
+                              Post
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </>
+            )}
+
+            {/* POLLS SECTION */}
+            {sectionView === 'polls' && !loading && !errorMsg && (
+              <div className="space-y-4">
+                {filteredPolls.length === 0 && (
+                  <div className="text-center py-12 bg-slate-900/30 border border-slate-800 rounded-xl">
+                    <Vote className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+                    <p className="text-slate-300 font-medium">No polls found</p>
+                    <p className="text-xs text-slate-500 mt-1">Be the first to create a civic poll for the community.</p>
                   </div>
-                )
-              })}
-            </>
-          )}
+                )}
 
-          {/* POLLS SECTION */}
-          {sectionView === 'polls' && !loading && !errorMsg && (
-            <div className="space-y-4">
-              {filteredPolls.length === 0 && (
-                <div className="text-center py-12 bg-slate-900/30 border border-slate-800 rounded-xl">
-                  <Vote className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                  <p className="text-slate-300 font-medium">No polls found</p>
-                  <p className="text-xs text-slate-500 mt-1">Be the first to create a civic poll for the community.</p>
-                </div>
-              )}
+                {filteredPolls.map((poll) => {
+                  const totalVotes = poll.votes_a + poll.votes_b
+                  const pctA = totalVotes > 0 ? Math.round((poll.votes_a / totalVotes) * 100) : 0
+                  const pctB = totalVotes > 0 ? Math.round((poll.votes_b / totalVotes) * 100) : 0
+                  const userChoice = userVotes[poll.id]
 
-              {filteredPolls.map((poll) => {
-                const totalVotes = poll.votes_a + poll.votes_b
-                const pctA = totalVotes > 0 ? Math.round((poll.votes_a / totalVotes) * 100) : 0
-                const pctB = totalVotes > 0 ? Math.round((poll.votes_b / totalVotes) * 100) : 0
-                const userChoice = userVotes[poll.id]
+                  return (
+                    <div key={poll.id} className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 space-y-4">
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span className="bg-indigo-950 text-indigo-300 px-2.5 py-0.5 rounded border border-indigo-800 font-medium">
+                          {poll.category}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {userChoice && (
+                            <span className="text-emerald-400 flex items-center gap-1 font-semibold">
+                              <Check className="w-3 h-3" /> Voted
+                            </span>
+                          )}
+                          <span>{totalVotes} Total Votes</span>
+                        </div>
+                      </div>
 
-                return (
-                  <div key={poll.id} className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 space-y-4">
-                    <div className="flex items-center justify-between text-xs text-slate-400">
-                      <span className="bg-indigo-950 text-indigo-300 px-2.5 py-0.5 rounded border border-indigo-800 font-medium">
-                        {poll.category}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        {userChoice && (
-                          <span className="text-emerald-400 flex items-center gap-1 font-semibold">
-                            <Check className="w-3 h-3" /> Voted
-                          </span>
-                        )}
-                        <span>{totalVotes} Total Votes</span>
+                      <h2 className="text-base font-semibold text-slate-100">{poll.question}</h2>
+
+                      <div className="space-y-3">
+                        {/* Option A */}
+                        <button
+                          disabled={!!userChoice}
+                          onClick={() => handleVotePoll(poll.id, 'a', poll.votes_a)}
+                          className={`w-full text-left bg-slate-950 border rounded-lg p-3 transition group relative overflow-hidden ${
+                            userChoice === 'a' ? 'border-emerald-500 ring-1 ring-emerald-500/50' : 'border-slate-800 hover:border-indigo-600'
+                          } ${userChoice ? 'cursor-default' : 'cursor-pointer'}`}
+                        >
+                          <div 
+                            className="absolute inset-y-0 left-0 bg-indigo-950/60 transition-all duration-500 pointer-events-none"
+                            style={{ width: `${pctA}%` }}
+                          />
+                          <div className="relative flex justify-between items-center text-xs">
+                            <span className="font-medium text-slate-200">
+                              {poll.option_a} {userChoice === 'a' && '• (Your vote)'}
+                            </span>
+                            <span className="font-bold text-slate-400">
+                              {poll.votes_a} ({pctA}%)
+                            </span>
+                          </div>
+                        </button>
+
+                        {/* Option B */}
+                        <button
+                          disabled={!!userChoice}
+                          onClick={() => handleVotePoll(poll.id, 'b', poll.votes_b)}
+                          className={`w-full text-left bg-slate-950 border rounded-lg p-3 transition group relative overflow-hidden ${
+                            userChoice === 'b' ? 'border-emerald-500 ring-1 ring-emerald-500/50' : 'border-slate-800 hover:border-indigo-600'
+                          } ${userChoice ? 'cursor-default' : 'cursor-pointer'}`}
+                        >
+                          <div 
+                            className="absolute inset-y-0 left-0 bg-indigo-950/60 transition-all duration-500 pointer-events-none"
+                            style={{ width: `${pctB}%` }}
+                          />
+                          <div className="relative flex justify-between items-center text-xs">
+                            <span className="font-medium text-slate-200">
+                              {poll.option_b} {userChoice === 'b' && '• (Your vote)'}
+                            </span>
+                            <span className="font-bold text-slate-400">
+                              {poll.votes_b} ({pctB}%)
+                            </span>
+                          </div>
+                        </button>
                       </div>
                     </div>
+                  )
+                })}
+              </div>
+            )}
+          </section>
 
-                    <h2 className="text-base font-semibold text-slate-100">{poll.question}</h2>
-
-                    <div className="space-y-3">
-                      {/* Option A */}
-                      <button
-                        disabled={!!userChoice}
-                        onClick={() => handleVotePoll(poll.id, 'a', poll.votes_a)}
-                        className={`w-full text-left bg-slate-950 border rounded-lg p-3 transition group relative overflow-hidden ${
-                          userChoice === 'a' ? 'border-emerald-500 ring-1 ring-emerald-500/50' : 'border-slate-800 hover:border-indigo-600'
-                        } ${userChoice ? 'cursor-default' : 'cursor-pointer'}`}
-                      >
-                        <div 
-                          className="absolute inset-y-0 left-0 bg-indigo-950/60 transition-all duration-500 pointer-events-none"
-                          style={{ width: `${pctA}%` }}
-                        />
-                        <div className="relative flex justify-between items-center text-xs">
-                          <span className="font-medium text-slate-200">
-                            {poll.option_a} {userChoice === 'a' && '? (Your vote)'}
-                          </span>
-                          <span className="font-bold text-slate-400">
-                            {poll.votes_a} ({pctA}%)
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Option B */}
-                      <button
-                        disabled={!!userChoice}
-                        onClick={() => handleVotePoll(poll.id, 'b', poll.votes_b)}
-                        className={`w-full text-left bg-slate-950 border rounded-lg p-3 transition group relative overflow-hidden ${
-                          userChoice === 'b' ? 'border-emerald-500 ring-1 ring-emerald-500/50' : 'border-slate-800 hover:border-indigo-600'
-                        } ${userChoice ? 'cursor-default' : 'cursor-pointer'}`}
-                      >
-                        <div 
-                          className="absolute inset-y-0 left-0 bg-indigo-950/60 transition-all duration-500 pointer-events-none"
-                          style={{ width: `${pctB}%` }}
-                        />
-                        <div className="relative flex justify-between items-center text-xs">
-                          <span className="font-medium text-slate-200">
-                            {poll.option_b} {userChoice === 'b' && '? (Your vote)'}
-                          </span>
-                          <span className="font-bold text-slate-400">
-                            {poll.votes_b} ({pctB}%)
-                          </span>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
+          {/* Sidebar */}
+          <aside className="space-y-6">
+            <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-5">
+              <h3 className="font-semibold text-white mb-2">Civio Engine</h3>
+              <p className="text-xs text-emerald-400 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Live Database Active
+              </p>
+              <p className="text-xs text-slate-500 mt-2">
+                Voting duplicates protected. Discussions & post editing enabled.
+              </p>
             </div>
-          )}
-        </section>
-
-        {/* Sidebar */}
-        <aside className="space-y-6">
-          <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-5">
-            <h3 className="font-semibold text-white mb-2">Civio Engine</h3>
-            <p className="text-xs text-emerald-400 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Live Database Active
-            </p>
-            <p className="text-xs text-slate-500 mt-2">
-              Voting duplicates protected. Discussions & post editing enabled.
-            </p>
-          </div>
-        </aside>
-      </main>
+          </aside>
+        </main>
+      )}
 
       {/* Auth Modal */}
       {isAuthModalOpen && (
