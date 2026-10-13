@@ -9,6 +9,10 @@ interface University {
   type?: string;
 }
 
+interface SchoolHubProps {
+  initialQuery?: string;
+}
+
 const FEATURED_SCHOOLS: University[] = [
   {
     name: 'Kwame Nkrumah University of Science and Technology',
@@ -52,11 +56,17 @@ const FEATURED_SCHOOLS: University[] = [
   }
 ];
 
-export default function SchoolHub() {
-  const [searchQuery, setSearchQuery] = useState('');
+export default function SchoolHub({ initialQuery = '' }: SchoolHubProps) {
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedRegion, setSelectedRegion] = useState('All');
   const [results, setResults] = useState<University[]>(FEATURED_SCHOOLS);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (initialQuery) {
+      setSearchQuery(initialQuery);
+    }
+  }, [initialQuery]);
 
   useEffect(() => {
     if (searchQuery.trim().length < 3) {
