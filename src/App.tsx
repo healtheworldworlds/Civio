@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import LiveFeed from './Components/LiveFeed';
 import SchoolHub from './Components/SchoolHub';
 
@@ -21,8 +21,8 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('civic')}>
-              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-blue-500/20">
-                ???
+              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-base shadow-md shadow-blue-500/20">
+                C
               </div>
               <span className="text-xl font-bold tracking-tight text-white">Civio</span>
             </div>
@@ -38,21 +38,19 @@ export default function App() {
               </button>
               <button
                 onClick={() => setActiveTab('admissions')}
-                className={`px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition ${
                   activeTab === 'admissions' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'
                 }`}
               >
-                <span>??</span>
-                <span>Admissions</span>
+                Admissions
               </button>
               <button
                 onClick={() => setActiveTab('opportunities')}
-                className={`px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition ${
                   activeTab === 'opportunities' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'
                 }`}
               >
-                <span>?</span>
-                <span>Opportunities</span>
+                Opportunities
               </button>
             </nav>
           </div>
@@ -63,9 +61,8 @@ export default function App() {
               value={globalSearch}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search schools, universities, initiatives..."
-              className="w-full bg-[#121c31] border border-gray-700/80 rounded-xl px-4 py-2 pl-9 text-xs md:text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-[#121c31] border border-gray-700/80 rounded-xl px-4 py-2 text-xs md:text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <span className="absolute left-3 top-2.5 text-gray-400 text-xs">??</span>
           </div>
 
           <div className="flex items-center gap-2">
